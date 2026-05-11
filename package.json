@@ -1,0 +1,19 @@
+{
+  "name": "aerowar",
+  "private": true,
+  "version": "1.0.0",
+  "description": "AeroWar — Browser military strategy game with aviation builder, stock exchange, and prediction markets",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^6.3.0"
+  },
+  "dependencies": {
+    "leaflet": "^1.9.4",
+    "three": "^0.184.0"
+  }
+}

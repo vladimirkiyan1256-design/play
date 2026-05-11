@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AeroWar — браузерная военная стратегия в реальном времени" />
+  <title>AeroWar — Военная стратегия</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="/styles/index.css" />
+</head>
+<body>
+  <!-- Leaflet Map Container -->
+  <div id="map-container"></div>
+
+  <!-- Canvas overlay for units/effects (positioned over map) -->
+  <canvas id="overlay-canvas"></canvas>
+
+  <!-- Top HUD Bar -->
+  <header id="hud-bar">
+    <div class="hud-left">
+      <div class="hud-logo">
+        <span class="logo-icon">✦</span>
+        <span class="logo-text">AEROWAR</span>
+      </div>
+    </div>
+    <div class="hud-center">
+      <div class="hud-stat" id="hud-money">
+        <span class="stat-icon">💰</span>
+        <span class="stat-label">Бюджет</span>
+        <span class="stat-value" id="hud-money-value">$50 000</span>
+      </div>
+      <div class="hud-stat" id="hud-air">
+        <span class="stat-icon">✈</span>
+        <span class="stat-label">Авиация</span>
+        <span class="stat-value" id="hud-air-value">0</span>
+      </div>
+      <div class="hud-stat" id="hud-ground">
+        <span class="stat-icon">🛡️</span>
+        <span class="stat-label">Наземные</span>
+        <span class="stat-value" id="hud-ground-value">0</span>
+      </div>
+      <div class="hud-stat" id="hud-sea">
+        <span class="stat-icon">🚢</span>
+        <span class="stat-label">Флот</span>
+        <span class="stat-value" id="hud-sea-value">0</span>
+      </div>
+      <div class="hud-stat" id="hud-territory">
+        <span class="stat-icon">🏴</span>
+        <span class="stat-label">Территория</span>
+        <span class="stat-value" id="hud-territory-value">0 км²</span>
+      </div>
+      <div class="hud-stat" id="hud-time">
+        <span class="stat-icon">⏱</span>
+        <span class="stat-label">Время</span>
+        <span class="stat-value" id="hud-time-value">0:00</span>
+      </div>
+    </div>
+    <div class="hud-right">
+      <button class="hud-btn" id="btn-pause" title="Пауза">⏸</button>
+      <button class="hud-btn" id="btn-settings" title="Настройки">⚙</button>
+    </div>
+  </header>
+
+  <!-- Left Sidebar -->
+  <nav id="sidebar">
+    <button class="sidebar-btn active" id="nav-army" title="Армия">
+      <span class="sidebar-icon">🛩</span>
+      <span class="sidebar-label">Армия</span>
+    </button>
+    <button class="sidebar-btn" id="nav-builder" title="Конструктор">
+      <span class="sidebar-icon">🔧</span>
+      <span class="sidebar-label">Строить</span>
+    </button>
+    <button class="sidebar-btn" id="nav-bases" title="Постройки">
+      <span class="sidebar-icon">🏗️</span>
+      <span class="sidebar-label">Базы</span>
+    </button>
+    <button class="sidebar-btn" id="nav-stocks" title="Биржа">
+      <span class="sidebar-icon">📊</span>
+      <span class="sidebar-label">Биржа</span>
+    </button>
+    <button class="sidebar-btn" id="nav-diplo" title="Прогнозы">
+      <span class="sidebar-icon">🎲</span>
+      <span class="sidebar-label">Прогнозы</span>
+    </button>
+  </nav>
+
+  <!-- Main Panel -->
+  <aside id="main-panel" class="panel-hidden">
+    <div class="panel-header">
+      <h2 id="panel-title">Армия</h2>
+      <button class="panel-close" id="panel-close-btn">✕</button>
+    </div>
+    <div class="panel-content" id="panel-content"></div>
+  </aside>
+
+  <!-- Context Menu (right-click on map) -->
+  <div id="context-menu" class="ctx-hidden">
+    <div class="ctx-item" data-action="build-hq">🏛️ Штаб</div>
+    <div class="ctx-item" data-action="build-airfield">🛫 Аэродром</div>
+    <div class="ctx-item" data-action="build-barracks">🏕️ Казарма</div>
+    <div class="ctx-item" data-action="build-shipyard">⚓ Верфь</div>
+    <div class="ctx-item" data-action="build-outpost">🏴 Аванпост</div>
+    <div class="ctx-item" data-action="build-radar">📡 Радар</div>
+    <div class="ctx-item" data-action="build-warehouse">📦 Склад</div>
+    <div class="ctx-item" data-action="build-repair">🔧 Рембаза</div>
+    <div class="ctx-separator"></div>
+    <div class="ctx-item" data-action="place-unit">📍 Разместить юнит</div>
+    <div class="ctx-item" data-action="move-unit">➡️ Переместить</div>
+    <div class="ctx-item" data-action="attack">⚔️ Атаковать</div>
+    <div class="ctx-separator"></div>
+    <div class="ctx-item" data-action="load-infantry">📦 Загрузить пехоту</div>
+    <div class="ctx-item" data-action="unload-cargo">📤 Выгрузить</div>
+    <div class="ctx-item" data-action="create-squadron">⭐ Создать эскадрилью</div>
+  </div>
+
+  <!-- Unit Info Popup -->
+  <div id="unit-info" class="popup-hidden">
+    <div class="unit-header">
+      <span id="unit-icon" class="unit-popup-icon">✈</span>
+      <h3 id="unit-name">—</h3>
+      <span id="unit-owner" class="territory-owner-badge">—</span>
+    </div>
+    <div class="territory-stats">
+      <div class="t-stat"><span class="t-label">HP:</span><span class="t-val" id="unit-hp">—</span></div>
+      <div class="t-stat"><span class="t-label">Мощь:</span><span class="t-val" id="unit-power">—</span></div>
+      <div class="t-stat"><span class="t-label">Статус:</span><span class="t-val" id="unit-status">—</span></div>
+    </div>
+    <div class="territory-actions" id="unit-actions"></div>
+  </div>
+
+  <!-- Bottom Events Log -->
+  <footer id="events-bar">
+    <div class="events-ticker" id="events-ticker">
+      <span class="event-item">🎮 AeroWar загружен. Выберите место для базы!</span>
+    </div>
+  </footer>
+
+  <!-- Loading Screen -->
+  <div id="loading-screen">
+    <div class="loading-content">
+      <div class="loading-logo">
+        <span class="logo-glow">✦</span>
+        <h1>AEROWAR</h1>
+        <p>Загрузка мира...</p>
+      </div>
+      <div class="loading-bar">
+        <div class="loading-fill" id="loading-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
